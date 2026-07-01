@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.travel.mapper.ScenicSpotMapper">
+
+    <select id="countByCategory" resultType="com.travel.vo.CategoryStatsVO">
+        SELECT c.name AS category_name, COUNT(s.id) AS count
+        FROM scenic_category c
+                 LEFT JOIN scenic_spot s ON s.category_id = c.id AND s.is_deleted = 0
+        WHERE c.is_deleted = 0
+        GROUP BY c.id, c.name
+        ORDER BY count DESC
+    </select>
+
+    <select id="pageQueryVO" resultType="com.travel.vo.ScenicSpotVO">
+        SELECT s.*, c.name AS category_name
+        FROM scenic_spot s
+        LEFT JOIN scenic_category c ON s.category_id = c.id
+        <where>
+            s.is_deleted = 0
+            <if test="categoryId != null">
+                AND s.category_id = #{categoryId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND s.name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        ORDER BY s.create_time DESC
+    </select>
+
+</mapper>

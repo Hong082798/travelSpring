@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.travel.mapper.EntertainmentItemMapper">
+
+    <!--
+        resultMap：显式声明 SQL 列名 → Java 字段名的映射关系
+        type 指向 VO 类，id 是这个 resultMap 的名字，下面 select 标签引用它
+    -->
+    <resultMap id="itemVOMap" type="com.travel.vo.EntertainmentItemVO">
+        <!-- id 标签专门映射主键，result 标签映射普通字段 -->
+        <!-- column = SQL里的列名（或别名），property = Java VO里的字段名 -->
+        <id column="id" property="id"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="category_name" property="categoryName"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="address" property="address"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
+        <result column="avg_price" property="avgPrice"/>
+        <result column="open_time" property="openTime"/>
+        <result column="phone" property="phone"/>
+        <result column="tags" property="tags"/>
+        <result column="score" property="score"/>
+        <result column="sort" property="sort"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- ===================== 分页列表查询 ===================== -->
+    <!--
+        resultMap 引用上面定义的 itemVOMap
+        注意：自定义分页方法返回值必须是 IPage<T>，MyBatis-Plus 分页插件
+        识别到这个返回值类型后，会自动执行 COUNT 并回填 total 和 records
+    -->
+    <select id="pageQueryVO" resultMap="itemVOMap">
+        SELECT
+        s.id,
+        s.category_id,
+        c.name AS category_name,
+        s.name,
+        s.cover_image,
+        s.price AS avg_price,
+        s.business_hours AS open_time,
+        s.phone,
+        s.tags,
+        s.score,
+        s.sort,
+        s.status,
+        s.create_time
+        FROM entertainment_item s
+        LEFT JOIN entertainment_category c
+        ON s.category_id = c.id
+        AND c.is_deleted = 0
+        AND c.status = 1
+        <where>
+            s.is_deleted = 0
+            <if test="categoryId != null">
+                AND s.category_id = #{categoryId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND s.name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="status != null">
+                AND s.status = #{status}
+            </if>
+        </where>
+        ORDER BY s.sort ASC, s.create_time DESC
+    </select>
+
+    <!-- ===================== 详情查询 ===================== -->
+    <!--
+        比列表多返回 description / address / longitude / latitude
+        这些字段数据量大，列表页不需要，详情页才需要
+        这是「按需查询」原则：不查用不到的字段，节省带宽和内存
+    -->
+    <select id="getDetailById" resultMap="itemVOMap">
+        SELECT s.id,
+               s.category_id,
+               c.name AS category_name,
+               s.name,
+               s.description,
+               s.cover_image,
+               s.address,
+               s.longitude,
+               s.latitude,
+               s.price AS avg_price,
+               s.business_hours AS open_time,
+               s.phone,
+               s.tags,
+               s.score,
+               s.sort,
+               s.status,
+               s.create_time
+        FROM entertainment_item s
+                 LEFT JOIN entertainment_category c
+                           ON s.category_id = c.id
+                               AND c.is_deleted = 0
+                               AND c.status = 1
+        WHERE s.id = #{id}
+          AND s.is_deleted = 0
+    </select>
+
+</mapper>
