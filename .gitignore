@@ -1,25 +1,58 @@
-HELP.md
+# ===== Maven =====
 target/
-.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+.mvn/wrapper/maven-wrapper.jar
 
-### STS ###
+# ===== Java =====
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# ===== Spring Boot =====
+HELP.md
+spring-shell.log
+
+# ===== 日志 =====
+*.log
+logs/
+log/
+
+# ===== 配置文件（含敏感信息）=====
+src/main/resources/application-local.yml
+src/main/resources/application-dev.yml
+src/main/resources/application-prod.yml
+src/main/resources/application-*.properties
+# 保留主配置（不含密码时可按需调整）
+# !src/main/resources/application.yml
+
+# ===== IDE - IntelliJ IDEA =====
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ===== IDE - Eclipse / STS =====
 .apt_generated
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
 .sts4-cache
+.metadata/
+bin/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+# ===== IDE - VS Code =====
+.vscode/
 
-### NetBeans ###
+# ===== IDE - NetBeans =====
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -29,5 +62,30 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+# ===== OS =====
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ===== Docker =====
+.env
+.env.*
+!.env.example
+
+# ===== 其他工具 =====
+.history/
+.claude/

@@ -39,13 +39,9 @@ public class NoteLikeServiceImpl extends ServiceImpl < NoteLikeMapper, NoteLike 
     }
 
     // 先尝试把之前软删除的记录复活（避免唯一约束冲突）
-    // 直接用 baseMapper 跳过全局软删除过滤，精确匹配 is_deleted=1 的行
-    LambdaUpdateWrapper < NoteLike > restoreWrapper = new LambdaUpdateWrapper <>();
-    restoreWrapper.eq( NoteLike :: getUserId, userId )
-        .eq( NoteLike :: getNoteId, noteId )
-        .eq( NoteLike :: getIsDeleted, 1 )
-        .set( NoteLike :: getIsDeleted, 0 );
-    boolean restored = baseMapper.update( null, restoreWrapper ) > 0;
+    // 必须用原生 SQL：Wrapper 方式（含 baseMapper.update）会被 MP 软删除拦截器
+    // 自动追加 AND is_deleted=0，永远匹配不到 is_deleted=1 的历史行。
+    boolean restored = baseMapper.restoreLike( userId, noteId ) > 0;
 
     if ( !restored ) {
       // 历史上从未点过赞，新增一条
