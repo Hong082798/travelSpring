@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.travel.mapper.BookingOrderMapper">
+
+    <resultMap id="BookingOrderVOMap" type="com.travel.vo.BookingOrderVO">
+        <id property="id" column="id"/>
+        <result property="status" column="status"/>
+        <result property="statusText" column="status_text"/>
+        <result property="targetType" column="target_type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="targetName" column="target_name"/>
+        <result property="slotDate" column="slot_date"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!-- 新增：管理员视角的resultMap，比 BookingOrderVOMap 多映射 userId/username 两列 -->
+    <resultMap id="BookingOrderAdminVOMap" type="com.travel.vo.BookingOrderAdminVO">
+        <id property="id" column="id"/>
+        <result property="status" column="status"/>
+        <result property="statusText" column="status_text"/>
+        <result property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="targetType" column="target_type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="targetName" column="target_name"/>
+        <result property="slotDate" column="slot_date"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectMyOrders" resultMap="BookingOrderVOMap">
+        SELECT
+        bo.id,
+        bo.status,
+        CASE bo.status
+        WHEN 0 THEN '待确认' WHEN 1 THEN '已确认'
+        WHEN 2 THEN '已取消' WHEN 3 THEN '已完成'
+        ELSE '未知状态'
+        END AS status_text,
+        bs.target_type,
+        bs.target_id,
+        CASE bs.target_type
+        WHEN 'SCENIC' THEN ss.name
+        WHEN 'ENTERTAINMENT' THEN es.name
+        END AS target_name,
+        bs.slot_date,
+        bs.start_time,
+        bs.end_time,
+        bo.create_time
+        FROM booking_order bo
+        <!-- 订单必须有关联时段；软删除过滤写在 ON 里，避免已删除时段继续出现在列表。 -->
+        JOIN booking_slot bs ON bo.slot_id = bs.id AND bs.is_deleted = 0
+        <!-- 按 target_type 分派到不同业务表，条件写在 ON 里，避免 LEFT JOIN 被 WHERE 条件变成 INNER JOIN。 -->
+        LEFT JOIN scenic_spot ss ON bs.target_type = 'SCENIC' AND bs.target_id = ss.id AND ss.is_deleted = 0
+        LEFT JOIN entertainment_item es ON bs.target_type = 'ENTERTAINMENT' AND bs.target_id = es.id AND es.is_deleted =
+        0
+        WHERE bo.user_id = #{userId}
+        AND bo.is_deleted = 0
+        ORDER BY bo.create_time DESC
+    </select>
+
+    <!-- 新增：管理员查看全平台订单，不按 user_id 过滤，多 JOIN user 表拿用户名 -->
+    <select id="selectAllOrders" resultMap="BookingOrderAdminVOMap">
+        SELECT
+        bo.id,
+        bo.status,
+        CASE bo.status
+        WHEN 0 THEN '待确认' WHEN 1 THEN '已确认'
+        WHEN 2 THEN '已取消' WHEN 3 THEN '已完成'
+        ELSE '未知状态'
+        END AS status_text,
+        bo.user_id,
+        u.username,
+        bs.target_type,
+        bs.target_id,
+        CASE bs.target_type
+        WHEN 'SCENIC' THEN ss.name
+        WHEN 'ENTERTAINMENT' THEN es.name
+        END AS target_name,
+        bs.slot_date,
+        bs.start_time,
+        bs.end_time,
+        bo.create_time
+        FROM booking_order bo
+        JOIN booking_slot bs ON bo.slot_id = bs.id AND bs.is_deleted = 0
+        <!-- 新增：管理员需要知道谁下的单，JOIN user 表；同样把过滤条件放 ON，防止软删用户导致整行消失 -->
+        JOIN user u ON bo.user_id = u.id AND u.is_deleted = 0
+        LEFT JOIN scenic_spot ss ON bs.target_type = 'SCENIC' AND bs.target_id = ss.id AND ss.is_deleted = 0
+        LEFT JOIN entertainment_item es ON bs.target_type = 'ENTERTAINMENT' AND bs.target_id = es.id AND es.is_deleted =
+        0
+        WHERE bo.is_deleted = 0
+        <!-- 新增：可选筛选条件，只有前端真的传了这个参数才拼进WHERE，这就是"动态SQL" -->
+        <if test="status != null">
+            AND bo.status = #{status}
+        </if>
+        <if test="targetType != null and targetType != ''">
+            AND bs.target_type = #{targetType}
+        </if>
+        ORDER BY bo.create_time DESC
+    </select>
+
+</mapper>
