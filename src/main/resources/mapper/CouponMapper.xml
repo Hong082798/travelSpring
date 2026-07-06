@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.travel.mapper.CouponMapper">
+
+    <!--
+      自定义SQL不受 MyBatis-Plus 自动逻辑删除过滤，必须手动加 is_deleted = 0，
+      否则一张已被软删除的优惠券模板理论上也能被"领取成功"，这是真实的坑，不是理论风险。
+    -->
+    <update id="incrementReceivedCount">
+        UPDATE coupon
+        SET received_count = received_count + 1
+        WHERE id = #{couponId}
+          AND received_count &lt; total_count
+          AND is_deleted = 0
+    </update>
+
+</mapper>

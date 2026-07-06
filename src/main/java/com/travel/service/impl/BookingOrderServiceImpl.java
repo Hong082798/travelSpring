@@ -7,6 +7,7 @@ import com.travel.exception.BusinessException;
 import com.travel.mapper.BookingOrderMapper;
 import com.travel.mapper.BookingSlotMapper;
 import com.travel.service.BookingOrderService;
+import com.travel.vo.BookingOrderAdminVO;
 import com.travel.vo.BookingOrderVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -111,5 +112,14 @@ public class BookingOrderServiceImpl implements BookingOrderService {
     long safePageSize = Math.min( MAX_PAGE_SIZE, Math.max( 1, pageSize ) );
     Page < BookingOrderVO > page = new Page <>( safePageNum, safePageSize );
     return orderMapper.selectMyOrders( page, userId );
+  }
+
+  @Override
+  public Page < BookingOrderAdminVO > getAllOrders( Integer status, String targetType, int pageNum, int PageSize ) {
+    // 管理员查看全平台订单，分页兜底逻辑跟getMyOrder完全一致
+    long safePageNum = Math.max( 1, pageNum );
+    long safePageSize = Math.min( MAX_PAGE_SIZE, Math.max( 1, PageSize ) );
+    Page < BookingOrderAdminVO > page = new Page <>( safePageNum, safePageSize );
+    return orderMapper.selectAllOrders( page, status, targetType );
   }
 }

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.travel.common.Result;
 import com.travel.dto.BookingOrderCreateDTO;
 import com.travel.service.BookingOrderService;
+import com.travel.vo.BookingOrderAdminVO;
 import com.travel.vo.BookingOrderVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -60,4 +61,15 @@ public class BookingOrderController {
     Long userId = StpUtil.getLoginIdAsLong();
     return Result.success( orderService.getMyOrders( userId, pageNum, pageSize ) );
   }
+
+  @SaCheckRole ( "admin" )
+  @Operation ( summary = "管理员查询全部可预约的订单" )
+  @GetMapping ( "/admin" )
+  public Result < Page < BookingOrderAdminVO > > getAllOrders( @RequestParam ( required = false ) Integer status,
+                                                               @RequestParam ( required = false ) String targetType,
+                                                               @RequestParam ( defaultValue = "1" ) int pageNum,
+                                                               @RequestParam ( defaultValue = "10" ) int pageSize ) {
+    return Result.success( orderService.getAllOrders( status, targetType, pageNum, pageSize ) );
+  }
+
 }
