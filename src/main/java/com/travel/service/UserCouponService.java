@@ -1,6 +1,7 @@
 package com.travel.service;
 
 import com.travel.vo.UserCouponVO;
+import jakarta.validation.constraints.NotEmpty;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,7 +13,7 @@ public interface UserCouponService {
   void receiveCoupon( Long userId, Long couponId );
 
   // 管理员定向发放，返回值是每个用户id对应的发放结果
-  Map < Long, String > assignCoupon( Long couponId, Long[] userIds );
+  Map < Long, String > assignCoupon( Long couponId, @NotEmpty List < Long > userIds );
 
   // 查询我的优惠卷列表
   List < UserCouponVO > listMyCoupons( Long userId );

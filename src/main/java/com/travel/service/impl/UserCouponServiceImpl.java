@@ -9,19 +9,21 @@ import com.travel.mapper.CouponMapper;
 import com.travel.mapper.UserCouponMapper;
 import com.travel.service.UserCouponService;
 import com.travel.vo.UserCouponVO;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Service
 public class UserCouponServiceImpl implements UserCouponService {
 
   private final CouponMapper couponMapper;
@@ -39,6 +41,11 @@ public class UserCouponServiceImpl implements UserCouponService {
     Coupon coupon = couponMapper.selectById( couponId );
     if ( coupon == null || coupon.getStatus() == 0 ) {
       throw new RuntimeException( "优惠券不存在或已下架" );
+    }
+
+    LocalDateTime now = LocalDateTime.now();
+    if ( now.isBefore( coupon.getValidStartTime() ) || now.isAfter( coupon.getValidEndTime() ) ) {
+      throw new RuntimeException( "优惠券不在领取有效期内" );
     }
 
     // 每个人限领校验，必须在扣库存之前做，如果反过来，会出现库存已经扣了，但才发现这个用户领超了
@@ -68,7 +75,7 @@ public class UserCouponServiceImpl implements UserCouponService {
 
   @Override
   @Transactional
-  public Map < Long, String > assignCoupon( Long couponId, Long[] userIds ) {
+  public Map < Long, String > assignCoupon( Long couponId, @NotEmpty List < Long > userIds ) {
 
     Coupon coupon = couponMapper.selectById( couponId );
     if ( coupon == null ) {
@@ -128,7 +135,7 @@ public class UserCouponServiceImpl implements UserCouponService {
     vo.setDiscountAmount( coupon.getDiscountAmount() );
     vo.setThresholdAmount( coupon.getThresholdAmount() );
     vo.setValidEndTime( coupon.getValidEndTime() );
-    vo.setStatusDesc( UserCouponStatus.fromValue( String.valueOf( userCoupon.getStatus() ) ).getDesc() );
+    vo.setStatusDesc( UserCouponStatus.fromCode( userCoupon.getStatus() ).getDesc() );
     return vo;
 
   }
@@ -137,10 +144,10 @@ public class UserCouponServiceImpl implements UserCouponService {
   public BigDecimal validateAndCalculateDiscount( Long userId, Long userCouponId, BigDecimal orderOriginalAmount ) {
 
     UserCoupon userCoupon = userCouponMapper.selectById( userCouponId );
-    if ( userCoupon == null || userCoupon.getUserId().equals( userId ) ) {
+    if ( userCoupon == null || !userCoupon.getUserId().equals( userId ) ) {
       throw new RuntimeException( "优惠券不存在，或当前优惠卷不属于当前用户" );
     }
-    if ( !UserCouponStatus.UNUSED.name().equals( userCoupon.getStatus() ) ) {
+    if ( UserCouponStatus.fromCode( userCoupon.getStatus() ) != UserCouponStatus.UNUSED ) {
       throw new RuntimeException( "优惠券已使用或已过期，不能再次使用" );
     }
 
@@ -161,7 +168,7 @@ public class UserCouponServiceImpl implements UserCouponService {
   public void markAsUsed( Long userCouponId, Long orderId ) {
 
     UserCoupon userCoupon = userCouponMapper.selectById( userCouponId );
-    userCoupon.setStatus( Integer.valueOf( UserCouponStatus.USED.name() ) );
+    userCoupon.setStatus( UserCouponStatus.USED.getCode() );
     userCoupon.setOrderId( orderId );
     userCoupon.setUseTime( LocalDateTime.now() );
     userCouponMapper.updateById( userCoupon );

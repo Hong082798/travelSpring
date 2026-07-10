@@ -30,4 +30,10 @@ public class BookingOrder {
   @TableLogic
   private Integer isDeleted;
 
+  private Integer quantity;
+  private java.math.BigDecimal originalAmount;
+  private java.math.BigDecimal discountAmount;
+  private java.math.BigDecimal actualAmount;
+  private Long userCouponId;
+
 }

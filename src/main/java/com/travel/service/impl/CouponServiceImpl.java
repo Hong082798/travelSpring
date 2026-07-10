@@ -9,12 +9,14 @@ import com.travel.mapper.CouponMapper;
 import com.travel.service.CouponService;
 import com.travel.vo.CouponVO;
 import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Service
 public class CouponServiceImpl implements CouponService {
 
   private final CouponMapper couponMapper;

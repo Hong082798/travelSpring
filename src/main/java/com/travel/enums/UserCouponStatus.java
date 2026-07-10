@@ -6,27 +6,33 @@ package com.travel.enums;
  */
 public enum UserCouponStatus {
 
-  UNUSED( "'未使用'" ),
-  USED( "已使用" ),
-  EXPIRED( "已过期" );
+  UNUSED( 0, "未使用" ),
+  USED( 1, "已使用" ),
+  EXPIRED( 2, "已过期" );
 
+  private final int code;
   private final String desc;
 
-  UserCouponStatus( String desc ) {
+  UserCouponStatus( int code, String desc ) {
+    this.code = code;
     this.desc = desc;
+  }
+
+  public int getCode() {
+    return code;
   }
 
   public String getDesc() {
     return desc;
   }
 
-  public static UserCouponStatus fromValue( String value ) {
+  public static UserCouponStatus fromCode( int code ) {
     for ( UserCouponStatus status : UserCouponStatus.values() ) {
-      if ( status.name().equals( value ) ) {
+      if ( status.getCode() == code ) {
         return status;
       }
     }
-    throw new IllegalArgumentException( "非法的优惠券状态： " + value );
+    throw new IllegalArgumentException( "非法的优惠券状态code： " + code );
   }
 
   /**

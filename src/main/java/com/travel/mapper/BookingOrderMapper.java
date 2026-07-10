@@ -21,8 +21,18 @@ public interface BookingOrderMapper extends BaseMapper < BookingOrder > {
       "targetType" ) String targetType );
 
   /**
-   * 按“当前状态”做条件更新，避免确认/取消等并发请求互相覆盖。
-   * 返回 1 表示状态切换成功，返回 0 表示订单不存在、已删除或状态已被其他请求改走。
+   * 按"当前状态"做条件更新，避免确认/取消等并发请求互相覆盖。
+   * <p>
+   * 为什么要在 WHERE 里带上 currentStatus，而不是"先 selectById 判断状态，
+   * 再单独 UPDATE"？因为如果拆成两步，两个并发请求可能都读到同一个旧状态
+   * （比如都读到"待确认"），然后都各自认为自己可以转换成功，其中一个的
+   * 业务判断结果实际上已经过期了。把 currentStatus 塞进 WHERE 条件，
+   * 相当于把"读状态"和"改状态"合并成一次原子操作：谁先执行谁成功，
+   * 后到的请求会因为这一行已经不满足 status = #{currentStatus} 而
+   * 影响 0 行，Service 层据此判断"状态已被别人改走，请求需要重试或报错"，
+   * 而不会出现两个请求都以为自己成功、状态被错误地二次流转的情况。
+   *
+   * @return 1=状态切换成功；0=订单不存在、已删除，或状态已被其他请求改走
    */
   @Update ( "UPDATE booking_order SET status = #{targetStatus}, update_time = NOW() " +
       "WHERE id = #{orderId} AND status = #{currentStatus} AND is_deleted = 0" )

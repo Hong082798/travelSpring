@@ -16,7 +16,7 @@ public class UserCouponVO {
   private BigDecimal discountAmount;
   private BigDecimal thresholdAmount;
 
-  private String status;
+  private Integer status;
   private String statusDesc;
 
   private Long orderId;

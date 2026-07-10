@@ -31,7 +31,7 @@ public class BookingOrderController {
   public Result < Long > createOrder( @Valid @RequestBody BookingOrderCreateDTO dto ) {
     // userId 从登录态取，不能让前端传，避免用户伪造 userId 替别人下单。
     Long userId = StpUtil.getLoginIdAsLong();
-    Long orderId = orderService.createOrder( userId, dto.getSlotId() );
+    Long orderId = orderService.createOrder( userId, dto.getSlotId(), dto.getQuantity(), dto.getUserCouponId() );
     return Result.success( orderId );
   }
 
